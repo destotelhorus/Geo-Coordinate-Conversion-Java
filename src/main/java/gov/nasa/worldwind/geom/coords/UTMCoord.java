@@ -9,6 +9,9 @@ import gov.nasa.worldwind.avlist.AVKey;
 import gov.nasa.worldwind.geom.*;
 import gov.nasa.worldwind.util.*;
 
+import static gov.nasa.worldwind.geom.coords.UTMCoordConverter.UTM_EASTING_ERROR;
+import static gov.nasa.worldwind.geom.coords.UTMCoordConverter.UTM_NORTHING_ERROR;
+
 /**
  * This immutable class holds a set of UTM coordinates along with it's corresponding latitude and longitude.
  *
@@ -31,7 +34,6 @@ public class UTMCoord
      *
      * @param latitude  the latitude <code>Angle</code>.
      * @param longitude the longitude <code>Angle</code>.
-     * @param globe     the <code>Globe</code> - can be null (will use WGS84).
      *
      * @return the corresponding <code>UTMCoord</code>.
      *
@@ -57,6 +59,51 @@ public class UTMCoord
             converter.getEasting(), converter.getNorthing(), Angle.fromRadians(converter.getCentralMeridian()));
     }
 
+    /**
+     * Create a set of UTM coordinates from a pair of latitude and longitude for the given <code>Globe</code>.
+     *
+     * @param latitude  the latitude <code>Angle</code>.
+     * @param longitude the longitude <code>Angle</code>.
+     * @param utmZone the utmZone which shall be forced for conversions.
+     *
+     * @return the corresponding <code>UTMCoord</code>.
+     *
+     * @throws IllegalArgumentException if <code>latitude</code> or <code>longitude</code> is null, or the conversion to
+     *                                  UTM coordinates fails.
+     */
+    public static UTMCoord fromLatLon(Angle latitude, Angle longitude, long utmZone)
+    {
+        if (latitude == null || longitude == null)
+        {
+            throw new IllegalArgumentException("Latitude Or Longitude Is Null");
+        }
+
+        final UTMCoordConverter converter = new UTMCoordConverter(utmZone);
+        long err = converter.convertGeodeticToUTM(latitude.radians, longitude.radians);
+
+        //since we forced a zone, we should ignore UTM_NORTHING_ERROR and UTM_EASTING_ERROR
+        err &= ~(UTM_NORTHING_ERROR|UTM_EASTING_ERROR);
+        if (err != UTMCoordConverter.UTM_NO_ERROR)
+        {
+            throw new IllegalArgumentException("UTM Conversion Error");
+        }
+
+        return new UTMCoord(latitude, longitude, converter.getZone(), converter.getHemisphere(),
+                converter.getEasting(), converter.getNorthing(), Angle.fromRadians(converter.getCentralMeridian()));
+    }
+
+    /**
+     * Create a set of UTM coordinates from a pair of latitude and longitude for the given <code>Globe</code>.
+     *
+     * @param latitude  the latitude <code>Angle</code>.
+     * @param longitude the longitude <code>Angle</code>.
+     * @param globe     the <code>Globe</code> - can be null (will use WGS84).
+     *
+     * @return the corresponding <code>UTMCoord</code>.
+     *
+     * @throws IllegalArgumentException if <code>latitude</code> or <code>longitude</code> is null, or the conversion to
+     *                                  UTM coordinates fails.
+     */
     public static UTMCoord fromLatLon(Angle latitude, Angle longitude, String datum)
     {
         if (latitude == null || longitude == null)

@@ -72,6 +72,11 @@ class UTMCoordConverter
         setUTMParameters(a, f, 0);
     }
 
+    UTMCoordConverter(long override)
+    {
+        setUTMZoneOverride(override);
+    }
+
     /**
      * The function Set_UTM_Parameters receives the ellipsoid parameters and UTM zone override parameter as inputs, and
      * sets the corresponding state variables.  If any errors occur, the error code(s) are returned by the function,
@@ -104,6 +109,30 @@ class UTMCoordConverter
         { /* no errors */
             UTM_a = a;
             UTM_f = f;
+            UTM_Override = override;
+        }
+        return (Error_Code);
+    }
+
+    /**
+     * The function Set_UTM_Zone_Override receives the UTM zone override parameter as inputs, and
+     * sets the corresponding state variables.  If any errors occur, the error code(s) are returned by the function,
+     * otherwise UTM_NO_ERROR is returned.
+     *
+     * @param override UTM override zone, zero indicates no override
+     *
+     * @return error code
+     */
+    private long setUTMZoneOverride(long override)
+    {
+        long Error_Code = UTM_NO_ERROR;
+
+        if ((override < 0) || (override > 60))
+        {
+            Error_Code |= UTM_ZONE_OVERRIDE_ERROR;
+        }
+        if (Error_Code == UTM_NO_ERROR)
+        { /* no errors */
             UTM_Override = override;
         }
         return (Error_Code);
